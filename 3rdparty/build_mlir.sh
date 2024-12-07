@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # https://github.com/onnx/onnx-mlir/blob/main/docs/BuildOnLinuxOSX.md
+COMMIT_HASH=$(curl -sSL "https://raw.githubusercontent.com/openxla/stablehlo/refs/tags/v1.8.6/build_tools/llvm_version.txt")
 
 git clone -n https://github.com/llvm/llvm-project.git
-# Check out a specific branch that is known to work with ONNX-MLIR.
-cd llvm-project && git checkout tags/llvmorg-18.1.8 && cd ..
+cd llvm-project && git checkout $COMMIT_HASH && cd ..
 
 mkdir llvm-project/build
 cd llvm-project/build
@@ -23,8 +23,15 @@ cmake -G Ninja ../llvm \
    -DCMAKE_BUILD_TYPE=Release \
    -DLLVM_ENABLE_ASSERTIONS=ON \
    -DLLVM_ENABLE_RTTI=ON \
-   -DLLVM_ENABLE_LLD=ON
+   -DLLVM_ENABLE_LLD=ON \
+   -DLLVM_INSTALL_UTILS=ON \
+   -DLLVM_INCLUDE_TOOLS=ON \
+   -DLLVM_INCLUDE_TESTS=OFF \
+   -DLLVM_USE_SPLIT_DWARF=ON \
+   -DMLIR_ENABLE_BINDINGS_PYTHON=OFF
    
-ninja -j$(nproc)
+cmake --build . --target all
+ninja install
+
 # cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=/mlir-tutorial/install
-cmake --build . --target check-mlir
+# cmake --build . --target check-mlir
